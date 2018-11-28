@@ -38,21 +38,12 @@ class MyListener(keyboard.Listener):
             self.key_pressed = False
 
     def callback(self,in_data, frame_count, time_info, status):
-        print("callback")
         if self.key_pressed == True:
-            #stream_queue.put(in_data)
-            print("record")
-            frames.append(in_data)
             return (in_data, pyaudio.paContinue)
-
         elif self.key_pressed == False:
-            #stream_queue.put(in_data)
-            frames.append(in_data)
             return (in_data, pyaudio.paComplete)
-
         else:
-            print("not record")
-            return (in_data,pyaudio.paContinue)
+            return (in_data,pyaudio.paAbort)
 
 
 listener = MyListener()
@@ -60,14 +51,13 @@ listener.start()
 started = False
 
 def record():
-    time.sleep(0.1)
     if listener.key_pressed == True and started == False:
         started = True
         listener.stream.start_stream()
-        print "*RECORDING"
+        print "start Stream"
 
     elif listener.key_pressed == False and started == True:
-        print "*DONE RECRODING"
+        print "Something coocked"
         listener.stream.stop_stream()
         listener.stream.close()
         p.terminate()
@@ -80,7 +70,3 @@ def record():
         wf.close()
 
         started = False
-
-while True:
-    time.sleep(0.1)
-    record()
