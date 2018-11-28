@@ -1,7 +1,6 @@
-from pynput import keyboard
-import time
 import pyaudio
 import wave
+from pynput import keyboard
 
 CHUNK = 8192
 FORMAT = pyaudio.paInt16
@@ -11,62 +10,49 @@ RECORD_SECONDS = 5
 WAVE_OUTPUT_FILENAME = "output.wav"
 
 p = pyaudio.PyAudio()
+stream = p.open(format=FORMAT,
+                channels=CHANNELS,
+                rate=RATE,
+                input=True,
+                frames_per_buffer=CHUNK)  
+print(stream.is_active())       
 frames = []
 
-def callback(in_data, frame_count, time_info, status):
-    return (in_data, pyaudio.paContinue)
-
-class MyListener(keyboard.Listener):
-    def __init__(self):
-        super(MyListener, self).__init__(self.on_press, self.on_release)
-        self.key_pressed = None
-
-        self.stream = p.open(format=FORMAT,
-                             channels=CHANNELS,
-                             rate=RATE,
-                             input=True,
-                             frames_per_buffer=CHUNK,
-                             stream_callback = self.callback)
-        print self.stream.is_active()
-
-    def on_press(self, key):
-        if key == keyboard.Key.cmd_l:
-            self.key_pressed = True
-
-    def on_release(self, key):
-        if key == keyboard.Key.cmd_l:
-            self.key_pressed = False
-
-    def callback(self,in_data, frame_count, time_info, status):
-        if self.key_pressed == True:
-            return (in_data, pyaudio.paContinue)
-        elif self.key_pressed == False:
-            return (in_data, pyaudio.paComplete)
-        else:
-            return (in_data,pyaudio.paAbort)
+def on_press(key):
+    if key == keyboard.Key.cmd_l:
+        print('- Started recording -'.format(key))
+        try:
+            data = stream.read(CHUNK)
+            frames.append(data)
+        except IOError: 
+            print('warning: dropped frame')# can replace        with 'pass' if no message desired 
+    else:
+        print('incorrect character {0}, press     cmd_l'.format(key))
 
 
-listener = MyListener()
-listener.start()
-started = False
+def on_release(key):
+    print('{0} released'.format(
+    key))
+    if key == keyboard.Key.cmd_l:
+        print('{0} stop'.format(key))
+        keyboard.Listener.stop
+        return False
 
-def record():
-    if listener.key_pressed == True and started == False:
-        started = True
-        listener.stream.start_stream()
-        print "start Stream"
+print("* recording")
 
-    elif listener.key_pressed == False and started == True:
-        print "Something coocked"
-        listener.stream.stop_stream()
-        listener.stream.close()
-        p.terminate()
 
-        wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(p.get_sample_size(FORMAT))
-        wf.setframerate(RATE)
-        wf.writeframes(b''.join(frames))
-        wf.close()
+with keyboard.Listener(on_press=on_press,     on_release=on_release) as listener:
+    listener.join()
 
-        started = False
+print("* done recording")
+
+stream.stop_stream()
+stream.close()
+p.terminate()
+
+wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+wf.setnchannels(CHANNELS)
+wf.setsampwidth(p.get_sample_size(FORMAT))
+wf.setframerate(RATE)
+wf.writeframes(b''.join(frames))
+wf.close()

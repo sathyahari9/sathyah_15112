@@ -11,7 +11,6 @@ import _thread
 import random
 from pynput import keyboard
 from tkinter.filedialog import askopenfilename
-import record
 import play 
 
 def getFile():
@@ -101,7 +100,6 @@ def playGame():
         listPlay.append(notePlay)
 
     while True:
-        _thread.start_new_thread(record.record,())
         ret, img = cam.read()
         img = cv2.resize(img,(1100,600))
         # converting color from Red, Blue, Green to Hue, Saturation and Value

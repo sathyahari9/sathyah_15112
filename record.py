@@ -16,7 +16,7 @@ stream = p.open(format=FORMAT,
                 channels=CHANNELS,
                 rate=RATE,
                 input=True,
-                frames_per_buffer=CHUNK)         
+                frames_per_buffer=CHUNK) 
 frames = []
 
 recordingEvent = threading.Event()    # set to activate recording

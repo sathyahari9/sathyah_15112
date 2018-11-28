@@ -15,7 +15,6 @@ import _thread
 import random
 from pynput import keyboard
 import gamify as gm
-import record
 import play
 
 current = set()
@@ -112,7 +111,6 @@ def video():
     keysCo = {}
     coordinates = []
     while True:
-        _thread.start_new_thread(record.record,())
         ret, img = cam.read()
         img = cv2.resize(img,(1100,600))
         # converting color from Red, Blue, Green to Hue, Saturation and Value
@@ -383,14 +381,14 @@ def playOutput():
 
 if __name__ == "__main__":
 
+    from tkinter import *
     from tkinter.filedialog import askopenfilename
     import pygame
     import os
     from PIL import Image, ImageFilter
-    try:
-        original = Image.open("piano.jpg")
-    except:
-        print("Unable to load image")
+
+    piano = Image.open("piano.jpg")
+    piano.show()
 
     root = Tk()
     root.minsize(500,500)
@@ -399,18 +397,11 @@ if __name__ == "__main__":
 
     index = 0
     path = "piano.jpg"
-
-    #The Label widget is a standard Tkinter widget used to display a text or image on the screen.
-    panel = tkinter.Label(root, image = original)
-
-    #The Pack geometry manager packs widgets in rows or columns.
-    panel.pack(side = "bottom", fill = "both", expand = "yes")
-
-    canvas = Canvas(root, width=500, height=500)
-    canvas.configure(bd=0, highlightthickness=0)
-    canvas.create_rectangle(0,0,500,500,fill="orange")
-    canvas.pack(side = TOP, anchor = NW, padx = 10, pady = 10)
-    canvas.pack()
+    # canvas = Canvas(root, width=500, height=500)
+    # canvas.configure(bd=0, highlightthickness=0)
+    # canvas.create_rectangle(0,0,500,500,fill="orange")
+    # canvas.pack(side = TOP, anchor = NW, padx = 10, pady = 10)
+    # canvas.pack()
     button1 = Button(root,text="Play Game",command=gm.playGame)
     button1.configure(width = 10, activebackground = "#33B5E5",
                                                             relief = FLAT)
