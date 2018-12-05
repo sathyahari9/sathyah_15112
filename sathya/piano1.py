@@ -1,5 +1,9 @@
-import cv2
+# Name - Sathya Hari
+# Section - I
+# Term project 1 phase
+# Project currently implements keys in the form of classes, plays audio files(once threaded) and recognizes fingers based on if they are colored green
 import os
+import cv2
 import numpy as np
 import copy
 import pyaudio
@@ -10,18 +14,61 @@ import time
 import _thread
 import random
 from pynput import keyboard
-from tkinter.filedialog import askopenfilename
-import play 
+import gamify as gm
+import play
+import example
+import threading
+import subprocess
 
-def getFile():
-    curr_directory = os.getcwd()
-    os.chdir(curr_directory)
-    filename = askopenfilename()
-    with open(filename) as f:
-        contents = f.read()
-    return contents
+from time import gmtime, strftime
+date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+outfile = date + ".wav"
 
-def gameBlocks(img,listPlay,coordinates):
+def recording(coordinates):
+    global outfile
+    files = {
+        (0,100):"raw/C.wav",
+        (75,125):"raw/C_s.wav",
+        (100,200):"raw/D.wav",
+        (175,225):"raw/D_s.wav",
+        (200,300):"raw/E.wav",
+        (300,400):"raw/F.wav",
+        (375,425):"raw/F_s.wav",
+        (400,500):"raw/G.wav",
+        (475,525):"raw/G_s.wav",
+
+        (500,600):"raw/A.wav",
+        (575,625):"raw/Bb.wav",
+        (600,700):"raw/B.wav",
+        (700,800):"raw/C1.wav",
+        (775,825):"raw/C_s1.wav",
+        (800,900):"raw/D1.wav",
+        (875,925):"raw/D_s1.wav",
+        (900,1000):"raw/E1.wav",
+        (1000,1100):"raw/F1.wav"
+    }
+    infiles = []
+    for coo in coordinates:
+        infiles.append(files[coo])
+    print(infiles)
+    from pydub import AudioSegment
+    sounds = []
+    if len(infiles) == 0:
+        pass
+    else:
+        combined_sounds = AudioSegment.from_wav(infiles[0])
+    for sound in infiles[1:]:
+        sound1 = AudioSegment.from_wav(sound)
+        combined_sounds = combined_sounds + sound1
+    if len(infiles) == 0:
+        pass
+    else:
+        combined_sounds.export("recordings/" + date +".wav", format="wav")
+
+# from queue import Queue
+# Display size
+def displayBlocks(img,coordinates,keysCo,keys):
+    global a
     colors = {
         (0,100):(0,0,255),
         (75,125):(0,255,0),
@@ -32,6 +79,7 @@ def gameBlocks(img,listPlay,coordinates):
         (375,425):(120,200,255),
         (400,500):(200,140,200),
         (475,525):(190,200,100),
+
         (500,600):(250,200,100),
         (575,625):(130,0,170),
         (600,700):(100,170,255),
@@ -42,26 +90,63 @@ def gameBlocks(img,listPlay,coordinates):
         (900,1000):(240,100,255),
         (1000,1100):(200,200,30)
     }
-    if len(listPlay)==0:
-        print("good job")
-    else:
-        color = colors[listPlay[-1]]
-        cv2.rectangle(img,(listPlay[-1][0],350),(listPlay[-1][1],400),color,thickness=cv2.FILLED)
-        if len(coordinates)==0:
-            print("start playing")
-        elif coordinates[-1] == listPlay[-1]:
-            print("Last coordinate:" + str(coordinates[-1]))
-            print("Last listPlay:" + str(listPlay[-1]))
-            listPlay.pop()
+    count = 0
+    for co in coordinates:
+        count+=1
+        color = colors[co]
+        cv2.rectangle(img,(co[0],350),(co[1],400),color,thickness=cv2.FILLED)
+        print(coordinates)
+        print(count)
+        if count%2 == 0:
+            coordinates.pop(0)
+    if len(coordinates) > 0:
+        print(coordinates[-1])
+
+# Basic Animation Framework
+
+from tkinter import *
+
+####################################
+# customize these functions
+####################################
+
+def init(data):
+    data.state = 0
+    data.mouseInvert = False
+    pass
+
+def mousePressed(event, data):
+    pass
+
+def keyPressed(event, data):
+    pass
+
+def redrawAll(canvas, data):
+    if data.state == 0:
+        canvas.create_rectangle(0,0,data.width,data.height,fill="black")
+        canvas.create_text(data.width/2,data.height/2,text="PIANO HERO",fill="white")
+        if data.mouseInvert:
+            canvas.create_rectangle(data.width/2 - 40, data.height/2 + 100, data.width/2 + 40, data.height/2 + 140, outline = "white", fill= "white")
+            canvas.create_text(data.width/2, data.height/2 + 120, text = "PLAY", fill = "black")
         else:
-            print("Last coordinate:" + str(coordinates[-1]))
-            print("Last listPlay:" + str(listPlay[-1]))
-        print(listPlay)
+            canvas.create_rectangle(data.width/2 - 40, data.height/2 + 100, data.width/2 + 40, data.height/2 + 140, outline = "white", fill= "black")
+            canvas.create_text(data.width/2, data.height/2 + 120, text = "PLAY", fill = "white")
+    else:
+        # canvas.create_rectangle(data.width,data.height,fill="black")
+        # canvas.create_text(data.width/2,data.height/2,text="AIR PIANO",fill="white")
+        # canvas.create_rectangle(data.width/2 - 40, data.height/2 + 100, data.width/2 + 40, data.height/2 + 140, outline = "white")
+        # canvas.create_text(data.width/2, data.height/2 + 120, text = "PLAY", fill = "white")
+        pass
 
 
-def playGame():
+####################################
+# use the run function as-is
+####################################
+        
+
+def video():
     lowerBound = np.array([33,80,40])
-    higherBound = np.array([102,255,150])
+    higherBound = np.array([102,255,255])
     cam = cv2.VideoCapture(0)
     # Defining kernel sizes for smoothing the image
     kernelOpen = np.ones((5,5))
@@ -72,35 +157,10 @@ def playGame():
     keyPressed= []
     keysCo = {}
     coordinates = []
-    contents = getFile()
-    listPlay = []
-    count = 0
-    checker = {
-        "C":(0,100),
-        "C_s":(75,125),
-        "D":(100,200),
-        "D_s":(175,225),
-        "E":(200,300),
-        "F":(300,400),
-        "F_s":(375,425),
-        "G":(400,500),
-        "G_s":(475,525),
-        "A":(500,600),
-        "Bb":(575,625),
-        "B":(600,700),
-        "C1":(700,800),
-        "C_s1":(775,825),
-        "D1":(800,900),
-        "D_s1":(875,925),
-        "E1":(900,1000),
-        "F1":(1000,1100)
-    }
-    for note in contents.splitlines():
-        notePlay = checker[note]
-        listPlay.append(notePlay)
-
+    recKeys = []
     while True:
         ret, img = cam.read()
+        cv2.flip(img,1)
         img = cv2.resize(img,(1100,600))
         # converting color from Red, Blue, Green to Hue, Saturation and Value
         imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
@@ -149,6 +209,7 @@ def playGame():
         18:"F1.wav"
         }
         keyID = 0
+        displayBlocks(img,coordinates,keysCo,keys)
         for i in range(0,len(conts)):
             x1, y1, w1, h1 = cv2.boundingRect(conts[i])
             cx1 = int(x1 + w1 / 2)
@@ -160,7 +221,8 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([0,100]))
-                
+                recKeys.append(keyID)
+
             elif 75 <= cx1 <= 125 and 400 <= cy1:
                 keyID = 2
                 _thread.start_new_thread(play.play_audio,(keyID,keys,))
@@ -168,7 +230,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([75,125]))
-                
+                recKeys.append(keyID)
 
             elif 125 <= cx1 <= 175 and 400 <= cy1:
                 keyID = 3
@@ -177,7 +239,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([100,200]))
-                
+                recKeys.append(keyID)
 
             elif 175 <= cx1 <= 225 and 400 <= cy1:
                 keyID = 4
@@ -186,7 +248,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([175,225]))
-               
+                recKeys.append(keyID)
 
             elif 225 <= cx1 <= 300 and 400 <= cy1:
                 keyID = 5
@@ -195,7 +257,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([200,300]))
-
+                recKeys.append(keyID)
 
             elif 300 <= cx1 <= 375 and 400 <= cy1:
                 keyID = 6
@@ -204,7 +266,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([300,400]))
-                
+                recKeys.append(keyID)
 
             elif 375 <= cx1 <= 425 and 400 <= cy1:
                 keyID = 7
@@ -213,7 +275,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([375,425]))
-                
+                recKeys.append(keyID)
 
             elif 425 <= cx1 <= 475 and 400 <= cy1:
                 keyID = 8
@@ -222,7 +284,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([400,500]))
-                
+                recKeys.append(keyID)
 
             elif 475 <= cx1 <= 525 and 400 <= cy1:
                 keyID = 9
@@ -231,6 +293,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([475,525]))
+                recKeys.append(keyID)
 
             elif 525 <= cx1 <= 575 and 400 <= cy1:
                 keyID = 10
@@ -239,7 +302,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([500, 600]))
-               
+                recKeys.append(keyID)
 
             elif 575 <= cx1 <= 625 and 400 <= cy1:
                 keyID = 11
@@ -248,6 +311,8 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([575, 625]))
+                recKeys.append(keyID)
+
             elif 625 <= cx1 <= 700 and 400 <= cy1:
                 keyID = 12
                 _thread.start_new_thread(play.play_audio,(keyID,keys))
@@ -255,7 +320,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([600, 700]))
-                
+                recKeys.append(keyID)
 
             elif 700 <= cx1 <= 775 and 400 <= cy1:
                 keyID = 13
@@ -264,7 +329,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([700, 800]))
-                
+                recKeys.append(keyID)
 
             elif 775 <= cx1 <= 825 and 400 <= cy1:
                 keyID = 14
@@ -273,7 +338,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([775, 825]))
-                
+                recKeys.append(keyID)
 
             elif 825 <= cx1 <= 875 and 400 <= cy1:
                 keyID = 15
@@ -282,7 +347,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([800, 900]))
-                
+                recKeys.append(keyID)
 
             elif 875 <= cx1 <= 925 and 400 <= cy1:
                 keyID = 16
@@ -291,7 +356,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([875, 925]))
-                
+                recKeys.append(keyID)
 
             elif 925 <= cx1 <= 1000 and 400 <= cy1:
                 keyID = 17
@@ -300,7 +365,7 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([900, 1000]))
-                
+                recKeys.append(keyID)
 
             elif 1000 <= cx1 <= 1100 and 400 <= cy1:
                 keyID = 18
@@ -309,8 +374,108 @@ def playGame():
                 keyPressed.append(keyID)
                 keysCo[keyID] = keysCo.get(keyID,1) + 1
                 coordinates.append(tuple([1000, 1100]))
+                recKeys.append(keyID)
 
-            gameBlocks(img,listPlay,coordinates)
-
+        _thread.start_new_thread(recording,(coordinates,))
         cv2.imshow('Cam', img)
+        if cv2.getWindowProperty('Cam',cv2.WND_PROP_VISIBLE) < 1:        
+            break
         cv2.waitKey(10)
+    cv2.destroyAllWindows()
+
+def mousePressedWrapper(event, canvas, data):
+    mousePressed(event, data)
+
+def keyPressedWrapper(event, canvas, data):
+    keyPressed(event, data)
+
+def run(width=300, height=300):
+    def redrawAllWrapper(canvas, data):
+        canvas.delete(ALL)
+        canvas.create_rectangle(0, 0, data.width, data.height,
+                                fill='white', width=0)
+        redrawAll(canvas, data)
+        canvas.update()    
+
+    def mousePressedWrapper(event, canvas, data):
+        mousePressed(event, data)
+        redrawAllWrapper(canvas, data)
+
+    def keyPressedWrapper(event, canvas, data):
+        keyPressed(event, data)
+        redrawAllWrapper(canvas, data)
+
+    # Set up data and call init
+    class Struct(object): pass
+    data = Struct()
+    data.width = width
+    data.height = height
+    root = Tk()
+    root.resizable(width=False, height=False) # prevents resizing window
+    init(data)
+    # create the root and the canvas
+    canvas = Canvas(root, width=data.width, height=data.height)
+    canvas.configure(bd=0, highlightthickness=0)
+    canvas.pack()
+    # set up events
+    root.bind("<Button-1>", lambda event:
+                            mousePressedWrapper(event, canvas, data))
+    root.bind("<Key>", lambda event:
+                            keyPressedWrapper(event, canvas, data))
+    redrawAll(canvas, data)
+    # and launch the app
+    root.mainloop()  # blocks until window is closed
+    print("bye!")
+
+def playOutput():
+    curr_directory = os.getcwd()
+    os.chdir(curr_directory)
+    filename = askopenfilename()
+    pygame.mixer.init()
+    pygame.mixer.music.load(filename)
+    pygame.mixer.music.play()
+
+
+if __name__ == "__main__":
+
+    try:
+        from tkinter import *
+        from tkinter.filedialog import askopenfilename
+        import pygame
+        import os
+        from PIL import Image, ImageFilter, ImageTk
+        root = Tk()
+        root.minsize(500,500)
+        root.title("Air piano")
+        listofsongs = []
+        index = 0
+        # path = "piano.jpg"
+        # img = Image.open(path)
+        # img=img.resize((250,250),Image.ANTIALIAS)
+        # img2 = ImageTk.PhotoImage(img)
+        # panel = Label(root, image = img2)
+        # panel.pack(side = "bottom", fill = "both", expand = "no")
+        img4 = PhotoImage(file="game.png")
+        button1 = Button(root,text="",image=img4,compound=CENTER,command=gm.playGame)
+        button1.pack(side = TOP)
+        img3 = PhotoImage(file="play.png")
+        button2 = Button(root,text="",image=img3,compound=CENTER,command=play.playWrapper)
+        button2.pack(side = TOP)
+        img2 = PhotoImage(file="solo.png")
+        button3 = Button(root,text="",image=img2,compound=CENTER,command=video)
+        button3.pack(side = TOP)
+        img1 = PhotoImage(file="start.png")
+        button4 = Button(root,text="",image=img1,compound=CENTER,command="")
+        button4.pack(side = TOP)
+        img = PhotoImage(file="stop.png")
+        button5 = Button(root,text="",image=img,compound=CENTER,command="")
+        button5.pack(side = TOP)
+        
+    except (SystemExit):
+        example.stop_AVrecording()
+        cv2.destroyAllWindows()
+        pygame.quit()
+    #launch app
+    
+    root.mainloop()
+    print("bye!")   

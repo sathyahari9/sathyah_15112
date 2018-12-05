@@ -1,4 +1,5 @@
-
+# file taken from reddit.com, will be modified significantly for TP3. A similar mechanism will be used for making the blocks fall to implement GuitarHero.
+# please ignore the following code for TP2, it is for my future reference.
 import random
 import pygame
 from pygame.locals import *
@@ -28,7 +29,7 @@ def drawBoard(screen):
     pygame.draw.polygon(screen, yfret,((400,850),(500,850),(500,800),(400,800),(400,850)),0)
     pygame.draw.polygon(screen, bfret,((500,850),(600,850),(600,800),(500,800),(500,850)),0)
     pygame.draw.polygon(screen, ofret,((600,850),(700,850),(700,800),(600,800),(600,850)),0)
-    #ellipse is (x,y,stretch x, stretch y
+    #ellipse is (x,y,stretch x, stretch y)
 
 def getFretColor(color, xpos):
     if xpos == 250:

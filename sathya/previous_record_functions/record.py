@@ -57,28 +57,28 @@ class myRecorder(threading.Thread):
     def run(self):
         do_recording()
 
+if __name__ == "__main__":
+    # start recorder thread
+    recordingThread = myRecorder()
+    recordingThread.start()
 
-# start recorder thread
-recordingThread = myRecorder()
-recordingThread.start()
+    # monitor keyboard
+    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+        listener.join()
 
-# monitor keyboard
-with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
-    listener.join()
+    # stop recorder thread
+    exitEvent.set()
+    recordingThread.join()
 
-# stop recorder thread
-exitEvent.set()    
-recordingThread.join()
+    print("* done recording")
 
-print("* done recording")
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
 
-stream.stop_stream()
-stream.close()
-p.terminate()
-
-wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
-wf.setnchannels(CHANNELS)
-wf.setsampwidth(p.get_sample_size(FORMAT))
-wf.setframerate(RATE)
-wf.writeframes(b''.join(frames))
-wf.close()
+    wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+    wf.setnchannels(CHANNELS)
+    wf.setsampwidth(p.get_sample_size(FORMAT))
+    wf.setframerate(RATE)
+    wf.writeframes(b''.join(frames))
+    wf.close()

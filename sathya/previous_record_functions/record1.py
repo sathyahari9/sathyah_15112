@@ -14,8 +14,7 @@ stream = p.open(format=FORMAT,
                 channels=CHANNELS,
                 rate=RATE,
                 input=True,
-                frames_per_buffer=CHUNK)  
-print(stream.is_active())       
+                frames_per_buffer=CHUNK)     
 frames = []
 
 def on_press(key):
@@ -38,21 +37,17 @@ def on_release(key):
         keyboard.Listener.stop
         return False
 
-print("* recording")
-
-
-with keyboard.Listener(on_press=on_press,     on_release=on_release) as listener:
-    listener.join()
-
-print("* done recording")
-
-stream.stop_stream()
-stream.close()
-p.terminate()
-
-wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
-wf.setnchannels(CHANNELS)
-wf.setsampwidth(p.get_sample_size(FORMAT))
-wf.setframerate(RATE)
-wf.writeframes(b''.join(frames))
-wf.close()
+if __name__ == "__main__":
+    print("* recording")
+    with keyboard.Listener(on_press=on_press,     on_release=on_release) as listener:
+        listener.join()
+    print("* done recording")
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+    wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+    wf.setnchannels(CHANNELS)
+    wf.setsampwidth(p.get_sample_size(FORMAT))
+    wf.setframerate(RATE)
+    wf.writeframes(b''.join(frames))
+    wf.close()
