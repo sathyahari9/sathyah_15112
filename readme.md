@@ -1,5 +1,8 @@
 Python Piano Hero project
+
+
 Hello User!
+
 Welcome to my Python piano hero project. It is a game in style similar to guitar hero played by people across the world, only difference- you use a piano instead.
 
 Online products don't offer a unique way to play the piano. Most of them use basic GUI and standard input/output for their programs. I have created a novel way for the user to play the piano - Using the webcam!
