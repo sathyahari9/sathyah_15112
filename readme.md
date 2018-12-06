@@ -11,17 +11,25 @@ OpenCV is a library that can be used to manipulate computer imagery. I created a
 
 Instructions:
 Run the following terminal command in the parent "sathyah_TP3" folder:
+
 cd piano
+
 Install the following libraries-
+
 Run the following commands in your terminal:
+
 pip3 install opencv-python
+
 pip3 install pyaudio
+
 pip3 install tkinter
 
 You might get an error regarding the installing numpy, so for safety purposes, install numpy:
+
 pip3 install numpy
 
 After doing this, do the following:
+
 python3 piano1.py
 
 It will run the program.
